@@ -44,9 +44,22 @@ Important columns:
 
 ## Suggested Stack
 
-- React + Vite or Next.js
+- React + Vite
 - Supabase JS client
 - Web-first dashboard
+
+## Local Development
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Build for Vercel/static hosting:
+
+```bash
+pnpm build
+```
 
 ## Environment
 
@@ -54,9 +67,14 @@ Important columns:
 VITE_SUPABASE_URL=...
 VITE_SUPABASE_ANON_KEY=...
 VITE_SUPABASE_PATROL_TABLE=patrol_hour_records
+VITE_SUPABASE_SOCIETY_ID=vihav_trade_center
+VITE_SOCIETY_TIMEZONE=Asia/Kolkata
+VITE_OWNER_PASSWORD=...
 ```
 
-For Next.js, use `NEXT_PUBLIC_` instead of `VITE_`.
+If `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` is missing, the app shows local demo records so the UI can still be reviewed.
+
+`VITE_OWNER_PASSWORD` enables the MVP client-side password gate. Because Vite exposes public env vars in frontend assets, this is a convenience barrier only; Supabase RLS must protect production data.
 
 ## Basic Query
 
