@@ -3,7 +3,10 @@ export type PatrolStatus = "IN_PROGRESS" | "COMPLETED" | "MISSED";
 export type ScanPoint = {
   point_id?: string;
   point_name?: string;
+  point?: string | number;
+  qrData?: string;
   scanned_at?: string;
+  scannedAt?: string;
   status?: string;
   [key: string]: unknown;
 };

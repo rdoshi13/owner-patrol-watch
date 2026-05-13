@@ -7,6 +7,7 @@ import {
   ChevronUp,
   Clock3,
   Eye,
+  EyeOff,
   Filter,
   Lock,
   LogOut,
@@ -377,6 +378,7 @@ function LogoLockup() {
 function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -417,17 +419,32 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           autoComplete="username"
           tabIndex={-1}
         />
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-            setError("");
-          }}
-          className="mt-2 h-11 w-full rounded-md border border-patrol-line px-3 text-base outline-none transition focus:border-patrol-blue"
-          autoComplete="current-password"
-        />
+        <div className="relative mt-2">
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              setError("");
+            }}
+            className="h-11 w-full rounded-md border border-patrol-line py-2 pl-3 pr-12 text-base outline-none transition focus:border-patrol-blue"
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((current) => !current)}
+            className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-ink focus:outline-none focus:ring-2 focus:ring-patrol-blue focus:ring-offset-1"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Eye className="h-4 w-4" aria-hidden="true" />
+            )}
+          </button>
+        </div>
         {error ? (
           <p className="mt-3 text-sm font-medium text-patrol-red">{error}</p>
         ) : null}
@@ -611,22 +628,47 @@ function ScanDetails({ record }: { record: PatrolRecord }) {
 
   return (
     <div className="mt-4 rounded-lg border border-patrol-line bg-slate-50 p-4">
-      <p className="text-sm font-semibold text-ink">Scan details</p>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-ink">Scan details</p>
+          <p className="mt-1 text-xs text-slate-600">
+            {scans.length > 0
+              ? `${scans.length} scanned point${scans.length === 1 ? "" : "s"} recorded for this patrol.`
+              : "No point-level scan details are available for this patrol."}
+          </p>
+        </div>
+        <p className="text-xs font-medium text-slate-500">
+          Progress: {record.completed_count} / {record.total_points}
+        </p>
+      </div>
       {scans.length > 0 ? (
-        <div className="mt-3 grid gap-2 md:grid-cols-2">
+        <div className="mt-4 grid gap-2 md:grid-cols-2">
           {scans.map((scan, index) => (
             <div
-              key={`${scan.point_id ?? "scan"}-${index}`}
+              key={`${getScanPointLabel(scan, index)}-${index}`}
               className="rounded-md bg-white p-3 ring-1 ring-patrol-line"
             >
-              <p className="text-sm font-semibold text-ink">
-                {scan.point_name || scan.point_id || `Scan ${index + 1}`}
-              </p>
-              <p className="mt-1 text-xs text-slate-600">
-                {scan.scanned_at
-                  ? formatDateTime(scan.scanned_at, config.timezone)
-                  : "No timestamp"}
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-ink">
+                    {getScanPointLabel(scan, index)}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Scanned at {getScanTimeLabel(scan)}
+                  </p>
+                </div>
+                <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-patrol-green ring-1 ring-emerald-200">
+                  Scanned
+                </span>
+              </div>
+              {getScanQrLabel(scan) ? (
+                <p className="mt-3 break-words rounded-md bg-slate-50 px-2 py-1.5 text-xs text-slate-600">
+                  QR code:{" "}
+                  <span className="font-medium text-slate-800">
+                    {getScanQrLabel(scan)}
+                  </span>
+                </p>
+              ) : null}
               {scan.status ? (
                 <p className="mt-1 text-xs text-slate-600">
                   Status: {scan.status}
@@ -636,9 +678,9 @@ function ScanDetails({ record }: { record: PatrolRecord }) {
           ))}
         </div>
       ) : (
-        <pre className="mt-3 max-h-56 overflow-auto rounded-md bg-white p-3 text-xs leading-5 text-slate-700 ring-1 ring-patrol-line">
-          {formatUnknownScans(record.scans)}
-        </pre>
+        <div className="mt-4 rounded-md bg-white p-4 text-sm text-slate-600 ring-1 ring-patrol-line">
+          The guard app did not send readable scan details for this record yet.
+        </div>
       )}
     </div>
   );
@@ -706,9 +748,11 @@ function getRecordId(record: PatrolRecord) {
 
 function normalizeScans(scans: PatrolRecord["scans"]): ScanPoint[] {
   if (Array.isArray(scans)) {
-    return scans.filter((scan): scan is ScanPoint =>
-      Boolean(scan && typeof scan === "object"),
-    );
+    return scans
+      .filter((scan): scan is ScanPoint =>
+        Boolean(scan && typeof scan === "object"),
+      )
+      .sort(compareScanPoints);
   }
 
   if (typeof scans === "string") {
@@ -720,19 +764,65 @@ function normalizeScans(scans: PatrolRecord["scans"]): ScanPoint[] {
     }
   }
 
+  if (scans && typeof scans === "object") {
+    return Object.entries(scans)
+      .reduce<ScanPoint[]>((parsedScans, [key, value]) => {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          return parsedScans;
+        }
+
+        const scan = value as ScanPoint;
+        parsedScans.push({
+          ...scan,
+          point: scan.point ?? key,
+        });
+
+        return parsedScans;
+      }, [])
+      .sort(compareScanPoints);
+  }
+
   return [];
 }
 
-function formatUnknownScans(scans: PatrolRecord["scans"]) {
-  if (!scans) {
-    return "No scan detail payload is available for this patrol record.";
+function compareScanPoints(first: ScanPoint, second: ScanPoint) {
+  return getScanPointNumber(first) - getScanPointNumber(second);
+}
+
+function getScanPointNumber(scan: ScanPoint) {
+  const value = scan.point ?? scan.point_id;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : Number.MAX_SAFE_INTEGER;
+}
+
+function getScanPointLabel(scan: ScanPoint, index: number) {
+  if (scan.point_name) {
+    return scan.point_name;
   }
 
-  if (typeof scans === "string") {
-    return scans;
+  if (scan.point !== undefined && scan.point !== null) {
+    return `Point ${scan.point}`;
   }
 
-  return JSON.stringify(scans, null, 2);
+  if (scan.point_id) {
+    return `Point ${scan.point_id}`;
+  }
+
+  return `Point ${index + 1}`;
+}
+
+function getScanTimeLabel(scan: ScanPoint) {
+  const timestamp = scan.scannedAt ?? scan.scanned_at;
+  return timestamp ? formatDateTime(timestamp, config.timezone) : "time not available";
+}
+
+function getScanQrLabel(scan: ScanPoint) {
+  const value = scan.qrData ?? scan.point_id;
+  if (typeof value !== "string" || !value) {
+    return "";
+  }
+
+  return value.replace(/^GUARDPATROL_QR_/, "");
 }
 
 export default App;
