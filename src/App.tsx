@@ -15,11 +15,10 @@ import {
   XCircle,
 } from "lucide-react";
 import { isUnlocked, lockSession, unlockSession } from "./auth";
-import { config, isSupabaseConfigured } from "./config";
+import { config } from "./config";
 import { fetchPatrolRecords } from "./patrolService";
 import { formatDateTime, formatTimeOnly, getDateKeyForTimezone } from "./time";
 import type {
-  DataMode,
   LoadState,
   PatrolRecord,
   PatrolStatus,
@@ -50,9 +49,6 @@ function App() {
   );
   const [guardFilter, setGuardFilter] = useState("all");
   const [records, setRecords] = useState<PatrolRecord[]>([]);
-  const [mode, setMode] = useState<DataMode>(
-    isSupabaseConfigured ? "supabase" : "demo",
-  );
   const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [lastLoadedAt, setLastLoadedAt] = useState<Date | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -65,7 +61,6 @@ function App() {
     try {
       const result = await fetchPatrolRecords(dateKey);
       setRecords(result.records);
-      setMode(result.mode);
       setLastLoadedAt(new Date());
       setLoadState({ status: "success" });
     } catch (error) {
@@ -271,9 +266,7 @@ function App() {
             <div className="rounded-lg border border-patrol-line bg-white p-4 text-sm text-slate-600 shadow-panel">
               <p className="font-semibold text-ink">Data status</p>
               <p className="mt-2">
-                {mode === "demo"
-                  ? "Supabase env vars are missing, so the dashboard is showing local demo records."
-                  : "Connected to Supabase with read-only dashboard queries."}
+                Connected to Supabase with read-only dashboard queries.
               </p>
               {!passwordRequired ? (
                 <p className="mt-3 rounded-md bg-amber-50 p-3 text-patrol-amber ring-1 ring-amber-200">
@@ -361,19 +354,10 @@ function LogoLockup() {
           fill="#f7f9fb"
         />
         <path
-          d="M16.2 22.7c1.8-3.3 4.4-5 7.6-5 2.7 0 4.9 1.1 6.4 3.2"
-          fill="none"
-          stroke="#2463a6"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-        />
-        <circle cx="16.2" cy="22.7" r="2.1" fill="#157f59" />
-        <circle cx="23.8" cy="17.7" r="2.1" fill="#157f59" />
-        <path
-          d="m20.2 27 3 3 6.1-7"
+          d="m16.8 23 4.1 4.1 7.9-9.1"
           fill="none"
           stroke="#157f59"
-          strokeWidth="2.8"
+          strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -411,10 +395,8 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-lg border border-patrol-line bg-white p-6 shadow-panel"
       >
-        <div className="flex h-11 w-11 items-center justify-center rounded-md bg-sky-50 text-patrol-blue">
-          <Lock className="h-5 w-5" aria-hidden="true" />
-        </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-normal">
+        <LogoLockup />
+        <h1 className="mt-6 text-2xl font-semibold tracking-normal">
           Owner access
         </h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">

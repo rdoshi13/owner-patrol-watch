@@ -1,23 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
 import { config, isSupabaseConfigured } from "./config";
-import { getDemoPatrolRecords } from "./demoData";
-import type { DataMode, PatrolRecord } from "./types";
+import type { PatrolRecord } from "./types";
 
 const supabase = isSupabaseConfigured
   ? createClient(config.supabaseUrl, config.supabaseAnonKey)
   : null;
 
 type FetchPatrolsResult = {
-  mode: DataMode;
   records: PatrolRecord[];
 };
 
 export async function fetchPatrolRecords(dateKey: string): Promise<FetchPatrolsResult> {
   if (!supabase) {
-    return {
-      mode: "demo",
-      records: getDemoPatrolRecords(dateKey, config.societyId),
-    };
+    throw new Error(
+      "Supabase is not configured. Add VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, and VITE_SUPABASE_SOCIETY_ID, then restart the app.",
+    );
   }
 
   const { data, error } = await supabase
@@ -32,7 +29,6 @@ export async function fetchPatrolRecords(dateKey: string): Promise<FetchPatrolsR
   }
 
   return {
-    mode: "supabase",
     records: (data ?? []) as PatrolRecord[],
   };
 }

@@ -25,8 +25,6 @@ export type PatrolRecord = {
   updated_at?: string | null;
 };
 
-export type DataMode = "demo" | "supabase";
-
 export type LoadState =
   | { status: "idle" | "loading"; message?: string }
   | { status: "success"; message?: string }
