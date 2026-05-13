@@ -11,7 +11,6 @@ import {
   Lock,
   LogOut,
   RefreshCcw,
-  ShieldCheck,
   UserRound,
   XCircle,
 } from "lucide-react";
@@ -19,7 +18,13 @@ import { isUnlocked, lockSession, unlockSession } from "./auth";
 import { config, isSupabaseConfigured } from "./config";
 import { fetchPatrolRecords } from "./patrolService";
 import { formatDateTime, formatTimeOnly, getDateKeyForTimezone } from "./time";
-import type { DataMode, LoadState, PatrolRecord, PatrolStatus, ScanPoint } from "./types";
+import type {
+  DataMode,
+  LoadState,
+  PatrolRecord,
+  PatrolStatus,
+  ScanPoint,
+} from "./types";
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -37,11 +42,17 @@ const statusIcons: Record<PatrolStatus, typeof CheckCircle2> = {
 
 function App() {
   const passwordRequired = Boolean(config.ownerPassword);
-  const [unlocked, setUnlocked] = useState(() => !passwordRequired || isUnlocked());
-  const [dateKey, setDateKey] = useState(() => getDateKeyForTimezone(config.timezone));
+  const [unlocked, setUnlocked] = useState(
+    () => !passwordRequired || isUnlocked(),
+  );
+  const [dateKey, setDateKey] = useState(() =>
+    getDateKeyForTimezone(config.timezone),
+  );
   const [guardFilter, setGuardFilter] = useState("all");
   const [records, setRecords] = useState<PatrolRecord[]>([]);
-  const [mode, setMode] = useState<DataMode>(isSupabaseConfigured ? "supabase" : "demo");
+  const [mode, setMode] = useState<DataMode>(
+    isSupabaseConfigured ? "supabase" : "demo",
+  );
   const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [lastLoadedAt, setLastLoadedAt] = useState<Date | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -60,7 +71,10 @@ function App() {
     } catch (error) {
       setLoadState({
         status: "error",
-        message: error instanceof Error ? error.message : "Unable to load patrol records.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unable to load patrol records.",
       });
     }
   }
@@ -87,9 +101,11 @@ function App() {
 
   const guards = useMemo(() => {
     const uniqueGuards = new Map<string, string>();
-    records.forEach((record) => uniqueGuards.set(record.guard_id, record.guard_name));
-    return Array.from(uniqueGuards, ([id, name]) => ({ id, name })).sort((a, b) =>
-      a.name.localeCompare(b.name),
+    records.forEach((record) =>
+      uniqueGuards.set(record.guard_id, record.guard_name),
+    );
+    return Array.from(uniqueGuards, ([id, name]) => ({ id, name })).sort(
+      (a, b) => a.name.localeCompare(b.name),
     );
   }, [records]);
 
@@ -104,13 +120,19 @@ function App() {
   const summary = useMemo(() => {
     return {
       total: filteredRecords.length,
-      completed: filteredRecords.filter((record) => record.status === "COMPLETED").length,
-      missed: filteredRecords.filter((record) => record.status === "MISSED").length,
-      active: filteredRecords.filter((record) => record.status === "IN_PROGRESS").length,
+      completed: filteredRecords.filter(
+        (record) => record.status === "COMPLETED",
+      ).length,
+      missed: filteredRecords.filter((record) => record.status === "MISSED")
+        .length,
+      active: filteredRecords.filter(
+        (record) => record.status === "IN_PROGRESS",
+      ).length,
     };
   }, [filteredRecords]);
 
-  const currentPatrol = filteredRecords.find((record) => record.status === "IN_PROGRESS") ??
+  const currentPatrol =
+    filteredRecords.find((record) => record.status === "IN_PROGRESS") ??
     filteredRecords[0];
 
   if (!unlocked) {
@@ -130,16 +152,10 @@ function App() {
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
             <div>
-              <div className="flex items-center gap-2 text-sm font-semibold text-patrol-blue">
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                Owner Patrol Watch
-              </div>
-              <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink sm:text-4xl">
+              <LogoLockup />
+              <h1 className="mt-4 text-3xl font-semibold tracking-normal text-ink sm:text-4xl">
                 Patrol monitoring dashboard
               </h1>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                {config.societyId} · {config.timezone} · {mode === "demo" ? "Demo data" : "Supabase"}
-              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -169,9 +185,24 @@ function App() {
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <Metric label="Total hours" value={summary.total} icon={Clock3} />
-            <Metric label="Completed" value={summary.completed} icon={CheckCircle2} tone="green" />
-            <Metric label="In progress" value={summary.active} icon={Eye} tone="blue" />
-            <Metric label="Missed" value={summary.missed} icon={AlertTriangle} tone="red" />
+            <Metric
+              label="Completed"
+              value={summary.completed}
+              icon={CheckCircle2}
+              tone="green"
+            />
+            <Metric
+              label="In progress"
+              value={summary.active}
+              icon={Eye}
+              tone="blue"
+            />
+            <Metric
+              label="Missed"
+              value={summary.missed}
+              icon={AlertTriangle}
+              tone="red"
+            />
           </div>
         </div>
       </section>
@@ -181,15 +212,24 @@ function App() {
           <aside className="space-y-4">
             <div className="rounded-lg border border-patrol-line bg-white p-4 shadow-panel">
               <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-                <Filter className="h-4 w-4 text-patrol-blue" aria-hidden="true" />
+                <Filter
+                  className="h-4 w-4 text-patrol-blue"
+                  aria-hidden="true"
+                />
                 Filters
               </div>
 
-              <label className="mt-4 block text-sm font-medium text-slate-700" htmlFor="date">
+              <label
+                className="mt-4 block text-sm font-medium text-slate-700"
+                htmlFor="date"
+              >
                 Patrol date
               </label>
               <div className="mt-2 flex items-center gap-2 rounded-md border border-patrol-line bg-white px-3">
-                <CalendarDays className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                <CalendarDays
+                  className="h-4 w-4 text-slate-500"
+                  aria-hidden="true"
+                />
                 <input
                   id="date"
                   type="date"
@@ -202,7 +242,10 @@ function App() {
                 />
               </div>
 
-              <label className="mt-4 block text-sm font-medium text-slate-700" htmlFor="guard">
+              <label
+                className="mt-4 block text-sm font-medium text-slate-700"
+                htmlFor="guard"
+              >
                 Guard
               </label>
               <select
@@ -234,13 +277,19 @@ function App() {
               </p>
               {!passwordRequired ? (
                 <p className="mt-3 rounded-md bg-amber-50 p-3 text-patrol-amber ring-1 ring-amber-200">
-                  No owner password is configured. Add `VITE_OWNER_PASSWORD` in Vercel for the MVP gate.
+                  No owner password is configured. Add `VITE_OWNER_PASSWORD` in
+                  Vercel for the MVP gate.
                 </p>
               ) : null}
               <p className="mt-3">
                 Last refresh:{" "}
                 <span className="font-medium text-ink">
-                  {lastLoadedAt ? formatDateTime(lastLoadedAt.toISOString(), config.timezone) : "Not yet"}
+                  {lastLoadedAt
+                    ? formatDateTime(
+                        lastLoadedAt.toISOString(),
+                        config.timezone,
+                      )
+                    : "Not yet"}
                 </span>
               </p>
             </div>
@@ -249,9 +298,12 @@ function App() {
           <section className="min-w-0 rounded-lg border border-patrol-line bg-white shadow-panel">
             <div className="flex flex-col justify-between gap-3 border-b border-patrol-line p-4 sm:flex-row sm:items-center">
               <div>
-                <h2 className="text-lg font-semibold text-ink">Hourly patrol records</h2>
+                <h2 className="text-lg font-semibold text-ink">
+                  Hourly patrol records
+                </h2>
                 <p className="mt-1 text-sm text-slate-600">
-                  {filteredRecords.length} record{filteredRecords.length === 1 ? "" : "s"} for {dateKey}
+                  {filteredRecords.length} record
+                  {filteredRecords.length === 1 ? "" : "s"} for {dateKey}
                 </p>
               </div>
               <StatusMessage loadState={loadState} />
@@ -263,7 +315,8 @@ function App() {
                 title="Unable to load patrol records"
                 message={loadState.message}
               />
-            ) : filteredRecords.length === 0 && loadState.status !== "loading" ? (
+            ) : filteredRecords.length === 0 &&
+              loadState.status !== "loading" ? (
               <EmptyState
                 icon={Clock3}
                 title="No patrol records found"
@@ -278,7 +331,9 @@ function App() {
                       key={rowId}
                       record={record}
                       expanded={expandedId === rowId}
-                      onToggle={() => setExpandedId(expandedId === rowId ? null : rowId)}
+                      onToggle={() =>
+                        setExpandedId(expandedId === rowId ? null : rowId)
+                      }
                     />
                   );
                 })}
@@ -288,6 +343,50 @@ function App() {
         </div>
       </section>
     </main>
+  );
+}
+
+function LogoLockup() {
+  return (
+    <div className="flex items-center gap-3" aria-label="Owner Patrol Watch">
+      <svg
+        className="h-11 w-11 shrink-0"
+        viewBox="0 0 44 44"
+        role="img"
+        aria-hidden="true"
+      >
+        <rect width="44" height="44" rx="10" fill="#17202a" />
+        <path
+          d="M22 8.8 34 14.1v8.4c0 8-4.5 13.1-12 15.6-7.5-2.5-12-7.6-12-15.6v-8.4L22 8.8Z"
+          fill="#f7f9fb"
+        />
+        <path
+          d="M16.2 22.7c1.8-3.3 4.4-5 7.6-5 2.7 0 4.9 1.1 6.4 3.2"
+          fill="none"
+          stroke="#2463a6"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+        />
+        <circle cx="16.2" cy="22.7" r="2.1" fill="#157f59" />
+        <circle cx="23.8" cy="17.7" r="2.1" fill="#157f59" />
+        <path
+          d="m20.2 27 3 3 6.1-7"
+          fill="none"
+          stroke="#157f59"
+          strokeWidth="2.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <div>
+        <p className="text-lg font-semibold leading-5 text-ink">
+          Owner Patrol Watch
+        </p>
+        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-patrol-blue">
+          Patrol assurance
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -315,11 +414,16 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
         <div className="flex h-11 w-11 items-center justify-center rounded-md bg-sky-50 text-patrol-blue">
           <Lock className="h-5 w-5" aria-hidden="true" />
         </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-normal">Owner access</h1>
+        <h1 className="mt-5 text-2xl font-semibold tracking-normal">
+          Owner access
+        </h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Enter the dashboard password to view patrol records. This MVP gate is client-side only.
+          Enter the dashboard password to view patrol records.
         </p>
-        <label className="mt-5 block text-sm font-medium text-slate-700" htmlFor="password">
+        <label
+          className="mt-5 block text-sm font-medium text-slate-700"
+          htmlFor="password"
+        >
           Password
         </label>
         <input
@@ -342,7 +446,9 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           className="mt-2 h-11 w-full rounded-md border border-patrol-line px-3 text-base outline-none transition focus:border-patrol-blue"
           autoComplete="current-password"
         />
-        {error ? <p className="mt-3 text-sm font-medium text-patrol-red">{error}</p> : null}
+        {error ? (
+          <p className="mt-3 text-sm font-medium text-patrol-red">{error}</p>
+        ) : null}
         <button
           type="submit"
           className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
@@ -376,7 +482,9 @@ function Metric({
     <div className="rounded-lg border border-patrol-line bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-slate-600">{label}</p>
-        <span className={`flex h-9 w-9 items-center justify-center rounded-md ${toneClass}`}>
+        <span
+          className={`flex h-9 w-9 items-center justify-center rounded-md ${toneClass}`}
+        >
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
       </div>
@@ -390,7 +498,9 @@ function CurrentPatrol({ record }: { record?: PatrolRecord }) {
     return (
       <div className="rounded-lg border border-patrol-line bg-white p-4 shadow-panel">
         <p className="text-sm font-semibold text-ink">Current patrol</p>
-        <p className="mt-3 text-sm text-slate-600">No patrol record is available for this selection.</p>
+        <p className="mt-3 text-sm text-slate-600">
+          No patrol record is available for this selection.
+        </p>
       </div>
     );
   }
@@ -402,7 +512,9 @@ function CurrentPatrol({ record }: { record?: PatrolRecord }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-ink">Current patrol</p>
-          <p className="mt-1 text-sm text-slate-600">{record.hour_window || record.hour_start}</p>
+          <p className="mt-1 text-sm text-slate-600">
+            {record.hour_window || record.hour_start}
+          </p>
         </div>
         <StatusBadge status={record.status} />
       </div>
@@ -449,7 +561,9 @@ function PatrolRow({
       <div className="grid gap-4 lg:grid-cols-[minmax(160px,1.2fr)_minmax(140px,1fr)_120px_120px_44px] lg:items-center">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-ink">{record.hour_window || record.hour_start}</p>
+            <p className="font-semibold text-ink">
+              {record.hour_window || record.hour_start}
+            </p>
             <StatusBadge status={record.status} />
           </div>
           <p className="mt-1 text-sm text-slate-600">
@@ -467,11 +581,16 @@ function PatrolRow({
             {record.completed_count} / {record.total_points}
           </p>
           <div className="mt-2 h-2 rounded-full bg-slate-100">
-            <div className="h-2 rounded-full bg-patrol-green" style={{ width: `${percent}%` }} />
+            <div
+              className="h-2 rounded-full bg-patrol-green"
+              style={{ width: `${percent}%` }}
+            />
           </div>
         </div>
 
-        <p className="text-sm text-slate-600">{formatDateTime(record.updated_at, config.timezone)}</p>
+        <p className="text-sm text-slate-600">
+          {formatDateTime(record.updated_at, config.timezone)}
+        </p>
 
         <button
           type="button"
@@ -514,14 +633,23 @@ function ScanDetails({ record }: { record: PatrolRecord }) {
       {scans.length > 0 ? (
         <div className="mt-3 grid gap-2 md:grid-cols-2">
           {scans.map((scan, index) => (
-            <div key={`${scan.point_id ?? "scan"}-${index}`} className="rounded-md bg-white p-3 ring-1 ring-patrol-line">
+            <div
+              key={`${scan.point_id ?? "scan"}-${index}`}
+              className="rounded-md bg-white p-3 ring-1 ring-patrol-line"
+            >
               <p className="text-sm font-semibold text-ink">
                 {scan.point_name || scan.point_id || `Scan ${index + 1}`}
               </p>
               <p className="mt-1 text-xs text-slate-600">
-                {scan.scanned_at ? formatDateTime(scan.scanned_at, config.timezone) : "No timestamp"}
+                {scan.scanned_at
+                  ? formatDateTime(scan.scanned_at, config.timezone)
+                  : "No timestamp"}
               </p>
-              {scan.status ? <p className="mt-1 text-xs text-slate-600">Status: {scan.status}</p> : null}
+              {scan.status ? (
+                <p className="mt-1 text-xs text-slate-600">
+                  Status: {scan.status}
+                </p>
+              ) : null}
             </div>
           ))}
         </div>
@@ -536,14 +664,22 @@ function ScanDetails({ record }: { record: PatrolRecord }) {
 
 function StatusMessage({ loadState }: { loadState: LoadState }) {
   if (loadState.status === "loading") {
-    return <p className="text-sm font-medium text-patrol-blue">Loading records...</p>;
+    return (
+      <p className="text-sm font-medium text-patrol-blue">Loading records...</p>
+    );
   }
 
   if (loadState.status === "error") {
-    return <p className="text-sm font-medium text-patrol-red">Refresh failed</p>;
+    return (
+      <p className="text-sm font-medium text-patrol-red">Refresh failed</p>
+    );
   }
 
-  return <p className="text-sm font-medium text-patrol-green">Auto-refresh every 30 seconds</p>;
+  return (
+    <p className="text-sm font-medium text-patrol-green">
+      Auto-refresh every 30 seconds
+    </p>
+  );
 }
 
 function EmptyState({
@@ -561,7 +697,9 @@ function EmptyState({
         <Icon className="h-5 w-5" aria-hidden="true" />
       </div>
       <h3 className="mt-4 text-lg font-semibold text-ink">{title}</h3>
-      <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">{message}</p>
+      <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">
+        {message}
+      </p>
     </div>
   );
 }
@@ -571,16 +709,24 @@ function getProgressPercent(record: PatrolRecord) {
     return 0;
   }
 
-  return Math.min(100, Math.round((record.completed_count / record.total_points) * 100));
+  return Math.min(
+    100,
+    Math.round((record.completed_count / record.total_points) * 100),
+  );
 }
 
 function getRecordId(record: PatrolRecord) {
-  return record.record_id ?? `${record.date_key}-${record.hour_start}-${record.guard_id}`;
+  return (
+    record.record_id ??
+    `${record.date_key}-${record.hour_start}-${record.guard_id}`
+  );
 }
 
 function normalizeScans(scans: PatrolRecord["scans"]): ScanPoint[] {
   if (Array.isArray(scans)) {
-    return scans.filter((scan): scan is ScanPoint => Boolean(scan && typeof scan === "object"));
+    return scans.filter((scan): scan is ScanPoint =>
+      Boolean(scan && typeof scan === "object"),
+    );
   }
 
   if (typeof scans === "string") {
