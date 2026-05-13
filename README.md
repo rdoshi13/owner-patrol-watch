@@ -1,5 +1,4 @@
 # owner-patrol-watch
-# owner-patrol-watcher
 
 Owner/admin app for monitoring guard patrol QR completion.
 
