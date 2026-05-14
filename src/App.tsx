@@ -130,12 +130,17 @@ function App() {
   const currentPatrol =
     filteredRecords.find((record) => record.status === "IN_PROGRESS") ??
     filteredRecords[0];
+  const societyName =
+    config.societyName ||
+    filteredRecords.find((record) => record.society)?.society ||
+    "Vihav Trade Center";
 
   if (!unlocked) {
     return (
       <PasswordGate
-        onUnlock={() => {
-          unlockSession();
+        societyName={societyName}
+        onUnlock={(rememberDevice) => {
+          unlockSession(rememberDevice);
           setUnlocked(true);
         }}
       />
@@ -207,7 +212,7 @@ function App() {
         <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
           <aside className="space-y-4">
             <div className="rounded-lg border border-patrol-line bg-white p-4 shadow-panel">
-              <div className="flex items-center gap-2 text-sm font-semibold text-ink">
+              <div className="flex flex-wrap items-center gap-3">
                 <Filter
                   className="h-4 w-4 text-patrol-blue"
                   aria-hidden="true"
@@ -336,6 +341,13 @@ function App() {
           </section>
         </div>
       </section>
+
+      <footer className="border-t border-patrol-line bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-5 text-sm sm:px-6 lg:px-8">
+          <p className="text-base font-semibold text-ink">{societyName}</p>
+          <p className="text-slate-500">Monitored with Owner Patrol Watch</p>
+        </div>
+      </footer>
     </main>
   );
 }
@@ -375,16 +387,23 @@ function LogoLockup() {
   );
 }
 
-function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
+function PasswordGate({
+  societyName,
+  onUnlock,
+}: {
+  societyName: string;
+  onUnlock: (rememberDevice: boolean) => void;
+}) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberDevice, setRememberDevice] = useState(false);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
     if (password === config.ownerPassword) {
-      onUnlock();
+      onUnlock(rememberDevice);
       return;
     }
 
@@ -398,6 +417,9 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
         className="w-full max-w-sm rounded-lg border border-patrol-line bg-white p-6 shadow-panel"
       >
         <LogoLockup />
+        <p className="mt-6 text-lg font-semibold text-slate-600">
+          {societyName}
+        </p>
         <h1 className="mt-6 text-2xl font-semibold tracking-normal">
           Owner access
         </h1>
@@ -448,6 +470,19 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
         {error ? (
           <p className="mt-3 text-sm font-medium text-patrol-red">{error}</p>
         ) : null}
+        <label
+          htmlFor="remember-device"
+          className="mt-4 flex cursor-pointer items-center gap-3 text-sm font-medium text-slate-700"
+        >
+          <input
+            id="remember-device"
+            type="checkbox"
+            checked={rememberDevice}
+            onChange={(event) => setRememberDevice(event.target.checked)}
+            className="h-4 w-4 rounded border-patrol-line text-patrol-blue focus:ring-patrol-blue"
+          />
+          Remember this device
+        </label>
         <button
           type="submit"
           className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-800"

@@ -36,6 +36,7 @@ export type LoadState =
 export type DashboardConfig = {
   tableName: string;
   societyId: string;
+  societyName: string;
   timezone: string;
   ownerPassword: string;
   supabaseUrl: string;
